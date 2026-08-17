@@ -1,11 +1,13 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/codeLambQ/codeLamb_book/backend/internal/model"
 	"github.com/codeLambQ/codeLamb_book/backend/internal/service"
+	"github.com/codeLambQ/codeLamb_book/backend/pkg/response"
 )
 
 // UserHandler 用户 HTTP 处理层。
@@ -18,27 +20,27 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 	return &UserHandler{svc: svc}
 }
 
-// Get 查询用户：GET /api/v1/users/{id}
-func (h *UserHandler) Get(w http.ResponseWriter, r *http.Request) {
-	u, err := h.svc.Get(r.PathValue("id"))
+// Get 查询用户：GET /api/v1/users/:id
+func (h *UserHandler) Get(c *gin.Context) {
+	u, err := h.svc.Get(c.Param("id"))
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
+		response.JSON(c, http.StatusNotFound, err.Error(), nil)
 		return
 	}
-	writeJSON(w, http.StatusOK, u)
+	response.JSON(c, http.StatusOK, "ok", u)
 }
 
 // Create 创建用户：POST /api/v1/users
-func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) Create(c *gin.Context) {
 	var u model.User
-	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid body"})
+	if err := c.ShouldBindJSON(&u); err != nil {
+		response.JSON(c, http.StatusBadRequest, "invalid body", nil)
 		return
 	}
 	if u.ID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id is required"})
+		response.JSON(c, http.StatusBadRequest, "id is required", nil)
 		return
 	}
 	_ = h.svc.Create(u)
-	writeJSON(w, http.StatusCreated, map[string]string{"status": "created"})
+	response.JSON(c, http.StatusCreated, "created", nil)
 }

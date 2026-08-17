@@ -1,17 +1,18 @@
 package middleware
 
 import (
-	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/codeLambQ/codeLamb_book/backend/pkg/logger"
 )
 
 // Logging 请求日志中间件。
-func Logging(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func Logging() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		start := time.Now()
-		next.ServeHTTP(w, r)
-		logger.Info(r.Method, r.URL.Path, time.Since(start))
-	})
+		c.Next()
+		logger.Info(c.Request.Method, c.FullPath(), c.Writer.Status(), time.Since(start))
+	}
 }

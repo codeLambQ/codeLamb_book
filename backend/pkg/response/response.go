@@ -1,8 +1,9 @@
 package response
 
 import (
-	"encoding/json"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Body 统一响应体。
@@ -12,9 +13,12 @@ type Body struct {
 	Data any    `json:"data,omitempty"`
 }
 
+// OK 成功响应。
+func OK(c *gin.Context, data any) {
+	JSON(c, http.StatusOK, "ok", data)
+}
+
 // JSON 写入统一响应。
-func JSON(w http.ResponseWriter, status int, msg string, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(Body{Code: status, Msg: msg, Data: data})
+func JSON(c *gin.Context, status int, msg string, data any) {
+	c.JSON(status, Body{Code: status, Msg: msg, Data: data})
 }

@@ -1,6 +1,10 @@
 package handler
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
 
 // HealthHandler 健康检查。
 type HealthHandler struct{}
@@ -11,6 +15,6 @@ func NewHealthHandler() *HealthHandler {
 }
 
 // Check 健康检查接口。
-func (h *HealthHandler) Check(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+func (h *HealthHandler) Check(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/codeLambQ/codeLamb_book/backend/internal/config"
 	"github.com/codeLambQ/codeLamb_book/backend/internal/router"
@@ -11,13 +10,9 @@ import (
 func main() {
 	cfg := config.Load()
 
-	srv := &http.Server{
-		Addr:    cfg.Server.Address,
-		Handler: router.New(),
-	}
-
+	r := router.New()
 	log.Printf("server listening on %s", cfg.Server.Address)
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := r.Run(cfg.Server.Address); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
 }
