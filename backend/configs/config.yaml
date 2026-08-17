@@ -1,4 +1,0 @@
-# 示例配置，可通过环境变量覆盖（见 internal/config/config.go）。
-server:
-  address: ":8080"   # SERVER_ADDR
-
