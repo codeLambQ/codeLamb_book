@@ -1,10 +1,11 @@
 package dao
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 )
@@ -15,6 +16,7 @@ type UserDao struct {
 
 var (
 	ErrorExitsEmailMsg = errors.New("该邮箱已存在")
+	ErrorNotFindUser   = errors.New("登录失败，用户名或密码错误")
 	ErrorCode          = "23505"
 )
 
@@ -24,7 +26,10 @@ func NewUserDao(mdb *gorm.DB) *UserDao {
 	}
 }
 
-func (u *UserDao) InsertUser(ctx *gin.Context, user *User) error {
+func (u *UserDao) InsertUser(ctx context.Context, user *User) error {
+	now := time.Now().UnixMilli()
+	user.CreatedAt = now
+	user.UpdatedAt = now
 	err := gorm.G[User](u.db).Create(ctx, user)
 	if err != nil {
 		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == ErrorCode {
@@ -33,4 +38,15 @@ func (u *UserDao) InsertUser(ctx *gin.Context, user *User) error {
 		return errors.New("用户创建失败")
 	}
 	return err
+}
+
+func (u *UserDao) FindUserByEmail(ctx context.Context, email string) (User, error) {
+	users, err := gorm.G[User](u.db).Where("email = ?", email).Find(ctx)
+	if err != nil {
+		return User{}, err
+	}
+	if len(users) == 0 {
+		return User{}, fmt.Errorf("%w", ErrorNotFindUser)
+	}
+	return users[0], nil
 }

@@ -1,12 +1,12 @@
 package repository
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	"github.com/codeLambQ/codeLamb_book/backend/internal/model"
 	"github.com/codeLambQ/codeLamb_book/backend/internal/repository/dao"
-	"github.com/gin-gonic/gin"
 )
 
 type UserRepository struct {
@@ -14,6 +14,7 @@ type UserRepository struct {
 }
 
 var ErrorExitsEmailMsg = dao.ErrorExitsEmailMsg
+var ErrorNotFindUser = dao.ErrorNotFindUser
 
 func NewUserRepository(dao *dao.UserDao) *UserRepository {
 	return &UserRepository{
@@ -21,7 +22,7 @@ func NewUserRepository(dao *dao.UserDao) *UserRepository {
 	}
 }
 
-func (u *UserRepository) RegisterUser(ctx *gin.Context, user *model.User) error {
+func (u *UserRepository) RegisterUser(ctx context.Context, user *model.User) error {
 	daoUser := &dao.User{Email: user.Email, Password: user.Password}
 	err := u.Dao.InsertUser(ctx, daoUser)
 	if errors.Is(err, ErrorExitsEmailMsg) {
@@ -29,4 +30,16 @@ func (u *UserRepository) RegisterUser(ctx *gin.Context, user *model.User) error 
 	}
 
 	return err
+}
+
+func (u *UserRepository) FindUserForEmail(ctx context.Context, email string) (*model.User, error) {
+	user, err := u.Dao.FindUserByEmail(ctx, email)
+
+	if err != nil {
+		return nil, err
+	}
+	if user.Email == "" {
+		return nil, fmt.Errorf("%w", ErrorNotFindUser)
+	}
+	return &model.User{ID: user.ID, Email: user.Email, Password: user.Password}, nil
 }
