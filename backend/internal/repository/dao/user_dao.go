@@ -10,8 +10,7 @@ import (
 )
 
 type UserDao struct {
-	pgErr *pgconn.PgError
-	db    *gorm.DB
+	db *gorm.DB
 }
 
 var (
@@ -27,9 +26,8 @@ func NewUserDao(mdb *gorm.DB) *UserDao {
 
 func (u *UserDao) InsertUser(ctx *gin.Context, user *User) error {
 	err := gorm.G[User](u.db).Create(ctx, user)
-
 	if err != nil {
-		if errors.As(err, &u.pgErr) && u.pgErr.Code == ErrorCode {
+		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == ErrorCode {
 			return fmt.Errorf("%w, 邮箱=%s", ErrorExitsEmailMsg, user.Email)
 		}
 		return errors.New("用户创建失败")

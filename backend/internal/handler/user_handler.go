@@ -51,7 +51,7 @@ func (u *UserHandler) Register(ctx *gin.Context) {
 
 	// 获取 restful 请求的请求体内容，传输到内部 struct req 上
 	if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": fmt.Sprintln("系统错误，请稍后重试"),
 		})
 		return
@@ -60,14 +60,14 @@ func (u *UserHandler) Register(ctx *gin.Context) {
 	// 做 email password 校验
 	ok, err := u.EmailRegexp.MatchString(req.Email)
 	if err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintln("系统错误，请稍后重试"),
 		})
 		return
 	}
 
 	if !ok {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": fmt.Sprintln("邮件格式有错误，请重新输入"),
 		})
 		return
@@ -75,44 +75,43 @@ func (u *UserHandler) Register(ctx *gin.Context) {
 
 	// 密码一致性判断
 	if req.Password != req.ConfirmPassword {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": fmt.Sprintln("两次密码不一致！"),
 		})
 		return
 	}
 	ok, err = u.PasswordRegexp.MatchString(req.Password)
 	if err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintln("系统错误，请稍后重试"),
 		})
 		return
 	}
 
 	if !ok {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": fmt.Sprintln("密码格式有误：长度最少为8位，必须包含大小写字符、特殊字符、数字"),
 		})
 		return
 	}
 
-	// TODO 注册操作
 	err = u.Svc.RegisterUser(ctx, &model.User{Email: req.Email, Password: req.Password})
 	if err != nil {
 		if errors.Is(err, ErrorExitsEmailMsg) {
-			ctx.JSON(http.StatusBadGateway, gin.H{
+			ctx.JSON(http.StatusConflict, gin.H{
 				"message": "邮箱已存在",
 			})
 			return
 		}
 
-		ctx.JSON(http.StatusBadGateway, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": "创建用户失败, 邮箱或密码错误!!!",
 		})
 		return
 
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusCreated, gin.H{
 		"message": fmt.Sprintln("注册成功，即将跳转到登录界面"),
 	})
 

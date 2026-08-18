@@ -4,7 +4,7 @@ package dao
 type User struct {
 	ID       int64  `gorm:"primaryKey;autoIncrement"`
 	Email    string `gorm:"unique"`
-	Password string ``
+	Password string
 	CreateAt int64
 	UpdateAt int64
 }
