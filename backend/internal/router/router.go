@@ -13,11 +13,25 @@ import (
 func NewRouter(db *gorm.DB) *gin.Engine {
 	server := gin.Default()
 	server.Use(middleware.GlobalCors())
+
+	// 用户模块依赖
 	ud := dao.NewUserDao(db)
 	ur := repository.NewUserRepository(ud)
 	userService := service.NewUserService(ur)
-	userHandler := handler.NewUserHandler(userService)
+
+	// 会话模块依赖
+	sd := dao.NewSessionDao(db)
+	sr := repository.NewSessionRepository(sd)
+	sessionService := service.NewSessionService(sr)
+
+	userHandler := handler.NewUserHandler(userService, sessionService)
 	userHandler.RegisterUserHandler(server)
+
+	// 需要登录的接口
+	auth := server.Group("/users")
+	auth.Use(middleware.SessionAuth(sessionService))
+	auth.GET("/:id", userHandler.Profile)
+	auth.POST("/:id", userHandler.Edit)
 
 	return server
 }

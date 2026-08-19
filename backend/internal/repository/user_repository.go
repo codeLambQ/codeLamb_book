@@ -43,3 +43,17 @@ func (u *UserRepository) FindUserForEmail(ctx context.Context, email string) (*m
 	}
 	return &model.User{ID: user.ID, Email: user.Email, Password: user.Password}, nil
 }
+
+// FindUserByID 根据用户 ID 查询用户
+func (u *UserRepository) FindUserByID(ctx context.Context, id int64) (*model.User, error) {
+	user, err := u.Dao.FindUserByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return &model.User{ID: user.ID, Email: user.Email, Password: user.Password}, nil
+}
+
+// UpdatePassword 更新用户密码
+func (u *UserRepository) UpdatePassword(ctx context.Context, id int64, hashPassword string) error {
+	return u.Dao.UpdatePassword(ctx, id, hashPassword)
+}

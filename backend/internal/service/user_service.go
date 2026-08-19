@@ -59,3 +59,29 @@ func (u *UserService) Login(ctx context.Context, email, password string) (*model
 	}
 	return user, nil
 }
+
+// GetProfile 获取用户信息
+func (u *UserService) GetProfile(ctx context.Context, userID int64) (*model.User, error) {
+	return u.UserRepository.FindUserByID(ctx, userID)
+}
+
+// ChangePassword 修改密码
+func (u *UserService) ChangePassword(ctx context.Context, userID int64, oldPassword, newPassword string) error {
+	user, err := u.UserRepository.FindUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	// 校验旧密码
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword)); err != nil {
+		return ErrorPasswordNotAccor
+	}
+
+	// 生成新密码哈希
+	hashPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	return u.UserRepository.UpdatePassword(ctx, userID, string(hashPassword))
+}

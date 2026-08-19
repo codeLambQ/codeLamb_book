@@ -50,3 +50,24 @@ func (u *UserDao) FindUserByEmail(ctx context.Context, email string) (User, erro
 	}
 	return users[0], nil
 }
+
+// FindUserByID 根据用户 ID 查询用户
+func (u *UserDao) FindUserByID(ctx context.Context, id int64) (User, error) {
+	user, err := gorm.G[User](u.db).Where("id = ?", id).First(ctx)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return User{}, fmt.Errorf("%w", ErrorNotFindUser)
+		}
+		return User{}, err
+	}
+	return user, nil
+}
+
+// UpdatePassword 更新用户密码
+func (u *UserDao) UpdatePassword(ctx context.Context, id int64, hashPassword string) error {
+	_, err := gorm.G[User](u.db).Where("id = ?", id).Updates(ctx, User{
+		Password:  hashPassword,
+		UpdatedAt: time.Now().UnixMilli(),
+	})
+	return err
+}
