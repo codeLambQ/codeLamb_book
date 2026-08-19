@@ -28,10 +28,13 @@ func NewRouter(db *gorm.DB) *gin.Engine {
 	userHandler.RegisterUserHandler(server)
 
 	// 需要登录的接口
-	auth := server.Group("/users")
+	auth := server.Group("/")
 	auth.Use(middleware.SessionAuth(sessionService))
-	auth.GET("/:id", userHandler.Profile)
-	auth.POST("/:id", userHandler.Edit)
+	{
+		auth.GET("/me", userHandler.Me)
+		auth.GET("/users/:id", userHandler.Profile)
+		auth.POST("/users/:id", userHandler.Edit)
+	}
 
 	return server
 }

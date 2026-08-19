@@ -153,6 +153,7 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "登录成功",
+		"id":      user.ID,
 		"email":   user.Email,
 	})
 }
@@ -178,6 +179,26 @@ func (u *UserHandler) Profile(ctx *gin.Context) {
 	paramID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil || paramID != userID {
 		ctx.JSON(http.StatusForbidden, gin.H{"message": "无权访问"})
+		return
+	}
+
+	user, err := u.Svc.GetProfile(ctx, userID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"message": "用户不存在"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"id":    user.ID,
+		"email": user.Email,
+	})
+}
+
+// Me 获取当前登录用户信息
+func (u *UserHandler) Me(ctx *gin.Context) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "未登录"})
 		return
 	}
 
